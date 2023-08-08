@@ -1,2 +1,3 @@
-# demo-cdl23
-Demo for CodeDay Labs 2023.
+# demos
+
+Showcasing demos for my CodeDay Labs experience during Summer 2023.
