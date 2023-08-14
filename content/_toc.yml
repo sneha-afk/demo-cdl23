@@ -1,0 +1,20 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: index
+parts:
+- caption: Background
+  chapters:
+  - file: notebooks/000-introduction
+    title: Introduction
+- caption: Contributions
+  chapters:
+  - file: notebooks/001-logit-bias
+    title: Logit Bias
+  - file: notebooks/002-redis-memory
+    title: Redis memory connector
+  - file: notebooks/003-wikipedia-connector
+    title: Wikipedia search connector
+  - file: notebooks/004-data-querying
+    title: NL data querying
