@@ -357,12 +357,18 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="data-querying">
 <h1>004 - Data querying<a class="headerlink" href="#data-querying" title="Permalink to this heading">#</a></h1>
-<p>TODO: explain what Pandas is (briefly), the need to include a separate code skill to lower resource usage, examples with iris.csv?</p>
 <p><code class="docutils literal notranslate"><span class="pre">pandas</span></code> is a popular data science toolkit used primarily for its <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> abstraction that allows for handling and accessing data easily, commonly from <code class="docutils literal notranslate"><span class="pre">.csv</span></code> files. To pass an entire dataset into an LLM to provide context for fulfilling natural language data queries is impractical due to token limits and expense.</p>
 <p>I worked with a teammate to develop two skills within SK: a code generation and exeuction skill, and a data processing skill. These two skills in conjunction to dynamically generate code, execute locally on the user’s system, and respond in natural language in a GPT-like format with low resource usage.</p>
 <p>See <a class="reference external" href="https://github.com/microsoft/semantic-kernel/pull/2289">pull request #2385</a> for the source code.</p>
 <hr class="docutils" />
 <p>Come back later to see the data skill in action!</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>-q<span class="w"> </span>install<span class="w"> </span>git+https://github.com//am831/semantic-kernel@data#subdirectory<span class="o">=</span>python
+</pre></div>
+</div>
+</div>
+</div>
 </section>
 
     <script type="text/x-thebe-config">
