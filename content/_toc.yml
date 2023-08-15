@@ -11,10 +11,10 @@ parts:
 - caption: Contributions
   chapters:
   - file: notebooks/001-logit-bias
-    title: Logit Bias
+    title: Logit bias
   - file: notebooks/002-redis-memory
     title: Redis memory connector
   - file: notebooks/003-wikipedia-connector
     title: Wikipedia search connector
   - file: notebooks/004-data-querying
-    title: NL data querying
+    title: Data querying

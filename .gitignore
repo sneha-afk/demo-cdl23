@@ -162,6 +162,6 @@ cython_debug/
 
 # ================================================
 # Ignore build files on main branch
-main/content/_build
+content/_build
 
 .bat
