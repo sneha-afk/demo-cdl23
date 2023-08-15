@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>004 - Data querying &#8212; Demos for CDL23</title>
+    <title>004 - Data querying &#8212; SK Demos</title>
   
   
   
@@ -35,7 +35,6 @@
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
     <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -66,7 +65,7 @@ const thebe_selector_output = ".output, .cell_output"
     <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/004-data-querying';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="003 - Wikipedia connector" href="003-wikipedia-connector.html" />
+    <link rel="prev" title="Wikipedia connector" href="003-wikipedia-connector.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -138,7 +137,7 @@ const thebe_selector_output = ".output, .cell_output"
   
   
   
-    <p class="title logo__title">Demos for CDL23</p>
+    <p class="title logo__title">SK Demos</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -157,10 +156,10 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contributions</span></p>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="001-logit-bias.html">Logit Bias</a></li>
+<li class="toctree-l1"><a class="reference internal" href="001-logit-bias.html">Logit bias</a></li>
 <li class="toctree-l1"><a class="reference internal" href="002-redis-memory.html">Redis memory connector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="003-wikipedia-connector.html">Wikipedia search connector</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">NL data querying</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Data querying</a></li>
 </ul>
 
     </div>
@@ -359,6 +358,11 @@ document.write(`
   <section class="tex2jax_ignore mathjax_ignore" id="data-querying">
 <h1>004 - Data querying<a class="headerlink" href="#data-querying" title="Permalink to this heading">#</a></h1>
 <p>TODO: explain what Pandas is (briefly), the need to include a separate code skill to lower resource usage, examples with iris.csv?</p>
+<p><code class="docutils literal notranslate"><span class="pre">pandas</span></code> is a popular data science toolkit used primarily for its <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> abstraction that allows for handling and accessing data easily, commonly from <code class="docutils literal notranslate"><span class="pre">.csv</span></code> files. To pass an entire dataset into an LLM to provide context for fulfilling natural language data queries is impractical due to token limits and expense.</p>
+<p>I worked with a teammate to develop two skills within SK: a code generation and exeuction skill, and a data processing skill. These two skills in conjunction to dynamically generate code, execute locally on the user’s system, and respond in natural language in a GPT-like format with low resource usage.</p>
+<p>See <a class="reference external" href="https://github.com/microsoft/semantic-kernel/pull/2289">pull request #2385</a> for the source code.</p>
+<hr class="docutils" />
+<p>Come back later to see the data skill in action!</p>
 </section>
 
     <script type="text/x-thebe-config">
@@ -398,7 +402,7 @@ document.write(`
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">003 - Wikipedia connector</p>
+        <p class="prev-next-title">Wikipedia connector</p>
       </div>
     </a>
 </div></div>
