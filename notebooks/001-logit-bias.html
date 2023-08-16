@@ -359,19 +359,249 @@ document.write(`
   <section class="tex2jax_ignore mathjax_ignore" id="logit-bias">
 <h1>Logit bias<a class="headerlink" href="#logit-bias" title="Permalink to this heading">#</a></h1>
 <p>From the OpenAI API, <a class="reference external" href="https://platform.openai.com/docs/api-reference/chat/create#chat/create-logit_bias">logit bias</a> is taken as a mapping of tokens to their bias levels ranging from -100, a potential complete ban of the token, to 100, a potenital guarantee of selection. Lesser magnitude values like -1 or 1 will configure the possibility for the token’s “selection”: the chance it will appear in the output.</p>
-<p>The representative tokens for certain characters can be obtained from <a class="reference external" href="https://platform.openai.com/tokenizer">OpenAI’s tokenizer</a>.</p>
+<p>The representative tokens for certain characters can be obtained from <a class="reference external" href="https://platform.openai.com/tokenizer">OpenAI’s tokenizer</a> or through other helpful programs.</p>
 <p>Tokenizers are sensitive to capitalization, spaces, and punctuation; it is crucial to consider all possible tokens of certain strings if logit bias is being implemented manually.</p>
+<blockquote>
+<div><p>A helpful tokenizer package to is <code class="docutils literal notranslate"><span class="pre">tiktoken</span></code>, check out the project <a class="reference external" href="https://github.com/openai/tiktoken">here</a>.</p>
+</div></blockquote>
 <p>As a team of three, we worked on implementing logit bias on the Python branch by adding a dictionary parameter to <code class="docutils literal notranslate"><span class="pre">ChatRequestSettings</span></code> and <code class="docutils literal notranslate"><span class="pre">CompleteRequestSettings</span></code> and including them in the JSON requests sent to the OpenAI API.</p>
 <p>See our <a class="reference external" href="https://github.com/microsoft/semantic-kernel/pull/1880">merged pull request #1880</a> for the source code.</p>
 <hr class="docutils" />
-<p>Come back later for a code example on how to use logit bias!</p>
+<p><strong>Case 1: <code class="docutils literal notranslate"><span class="pre">ChefBot</span></code></strong></p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>-q<span class="w"> </span>install<span class="w"> </span>git+https://github.com/sneha-afk/semantic-kernel@main#subdirectory<span class="o">=</span>python
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Logit bias is part of the offical Python module</span>
+<span class="o">!</span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>-q<span class="w"> </span>install<span class="w"> </span>semantic-kernel
 </pre></div>
 </div>
 </div>
 </div>
+<p>Imagine you are developing a <code class="docutils literal notranslate"><span class="pre">ChefBot</span></code> program that comes up with delicious recipes for a user while also keeping preferences and allergies in mind. Yum!</p>
+<p>A user may ask:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>User:&gt;<span class="w"> </span>I<span class="w"> </span>want<span class="w"> </span>to<span class="w"> </span>make<span class="w"> </span>a<span class="w"> </span>smoothie,<span class="w"> </span>pls<span class="w"> </span>remember<span class="w"> </span>I<span class="w"> </span>am<span class="w"> </span>allergic<span class="w"> </span>to<span class="w"> </span>bananas!
+</pre></div>
+</div>
+<p>Gathering the tokens for “bananas” yields <code class="docutils literal notranslate"><span class="pre">[3820,</span> <span class="pre">15991]</span></code>, which should be banned from the outputted recipe.</p>
+<blockquote>
+<div><p>As discussed earlier, however, to completely ban the tokens would mean having different variations of the string <code class="docutils literal notranslate"><span class="pre">&quot;bananas&quot;</span></code>.
+I will add these myself, but don’t be discouraged if you aren’t getting total bans at first!</p>
+</div></blockquote>
+<p>Let’s set up the <code class="docutils literal notranslate"><span class="pre">ChefBot</span></code> chat experience:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Required imports</span>
+
+<span class="kn">import</span> <span class="nn">semantic_kernel</span> <span class="k">as</span> <span class="nn">sk</span>
+<span class="kn">from</span> <span class="nn">semantic_kernel.connectors.ai.open_ai</span> <span class="kn">import</span> <span class="n">OpenAIChatCompletion</span>
+<span class="kn">from</span> <span class="nn">semantic_kernel.connectors.ai.chat_request_settings</span> <span class="kn">import</span> <span class="n">ChatRequestSettings</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Setup a chat service</span>
+
+<span class="c1"># Note: you can download this notebook and run in a directory containing a .env with your OpenAI API key,</span>
+<span class="c1"># or add it manually where the &quot;key&quot; string is. Be careful with your secrets!</span>
+<span class="n">USE_ENV</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">if</span> <span class="n">USE_ENV</span><span class="p">:</span>
+    <span class="n">api_key</span><span class="p">,</span> <span class="n">org_id</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">openai_settings_from_dot_env</span><span class="p">()</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">api_key</span><span class="p">,</span> <span class="n">org_id</span> <span class="o">=</span> <span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="kc">None</span>
+
+<span class="c1"># Register the chat service into the kernel</span>
+<span class="n">openai_chat_completion</span> <span class="o">=</span> <span class="n">OpenAIChatCompletion</span><span class="p">(</span><span class="s2">&quot;gpt-3.5-turbo&quot;</span><span class="p">,</span> <span class="n">api_key</span><span class="p">,</span> <span class="n">org_id</span><span class="p">)</span>
+
+<span class="c1"># Ensuring it was instantiated correctly</span>
+<span class="k">assert</span> <span class="n">openai_chat_completion</span>
+</pre></div>
+</div>
+</div>
+</div>
+<blockquote>
+<div><p>For more complex use with the kernel and as a semantic function, you can also register it as a skill:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">kernel</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">Kernel</span><span class="p">()</span>
+<span class="n">prompt_config</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">PromptTemplateConfig</span><span class="o">.</span><span class="n">from_completion_parameters</span><span class="p">(</span><span class="n">max_tokens</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">top_p</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="n">prompt_template</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">ChatPromptTemplate</span><span class="p">(</span><span class="s2">&quot;{{$user_input}}&quot;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">.</span><span class="n">prompt_template_engine</span><span class="p">,</span> <span class="n">prompt_config</span><span class="p">)</span>
+<span class="n">prompt_template</span><span class="o">.</span><span class="n">add_system_message</span><span class="p">(</span><span class="s2">&quot;You are a chat bot specializing the culinary arts.&quot;</span><span class="p">)</span>
+<span class="n">function_config</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">SemanticFunctionConfig</span><span class="p">(</span><span class="n">prompt_config</span><span class="p">,</span> <span class="n">prompt_template</span><span class="p">)</span>
+<span class="n">chat_with_chef</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">register_semantic_function</span><span class="p">(</span><span class="s2">&quot;ChefBot&quot;</span><span class="p">,</span> <span class="s2">&quot;Chat&quot;</span><span class="p">,</span> <span class="n">function_config</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>The tokens must be set with a logit bias of -100 for a total ban. This is done within the <code class="docutils literal notranslate"><span class="pre">ChatRequestSettings</span></code> instance send with the request.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">CompleteRequestSettings</span></code> is used in text completion requests.</p>
+</div></blockquote>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">settings</span> <span class="o">=</span> <span class="n">ChatRequestSettings</span><span class="p">(</span><span class="n">max_tokens</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">top_p</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+
+<span class="n">tokens_to_ban</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3820</span><span class="p">,</span> <span class="mi">15991</span><span class="p">,</span> <span class="mi">2271</span><span class="p">,</span> <span class="mi">35484</span><span class="p">,</span> <span class="mi">25996</span><span class="p">,</span> <span class="mi">3958</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens_to_ban</span><span class="p">:</span>
+    <span class="n">settings</span><span class="o">.</span><span class="n">token_selection_biases</span><span class="p">[</span><span class="n">token</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">100</span>       <span class="c1"># no monkey business</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Set up chat history and add the user’s request.</p>
+<blockquote>
+<div><p>In an actual program, this can be done more succinctly using <code class="docutils literal notranslate"><span class="pre">input()</span></code> and some parsing.</p>
+</div></blockquote>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">user_request</span> <span class="o">=</span> <span class="s2">&quot;I want to make a smoothie, pls remember I am allergic to bananas!&quot;</span>
+
+<span class="n">chat_messages</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="n">chat_messages</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">user_request</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>User request in one hand, loaded settings in the other, let’s get a response!</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">answer</span> <span class="o">=</span> <span class="k">await</span> <span class="n">openai_chat_completion</span><span class="o">.</span><span class="n">complete_chat_async</span><span class="p">(</span><span class="n">chat_messages</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+<span class="n">chat_messages</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">answer</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Define a helper loop for printing out chat history:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">print_chat</span><span class="p">(</span><span class="n">msg_list</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">role</span><span class="p">,</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">msg_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="s2">&quot;user&quot;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;User:&gt; </span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ChefBot:&gt; </span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">print_chat</span><span class="p">(</span><span class="n">chat_messages</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>User:&gt; I want to make a smoothie, pls remember I am allergic to bananas!
+
+ChefBot:&gt; No worries! Here&#39;s a delicious smoothie recipe that doesn&#39;t include bananas:
+
+Ingredients:
+- 1 cup of frozen berries (strawberries, blueberries, raspberries, or a mix)
+- 1 cup of spinach or kale
+- 1 cup of almond milk (or any other non-dairy milk of your choice)
+- 1 tablespoon of honey or maple syrup (optional, for added sweetness)
+- 1 tablespoon of chia seeds (optional, for added nutrition)
+- Ice cubes (optional, for a colder smoothie)
+
+Instructions:
+1. Add the frozen berries, spinach or kale, almond milk, honey or maple syrup, and chia seeds to a blender.
+2. Blend on high speed until smooth and creamy. If the mixture is too thick, you can add a little more almond milk to reach your desired consistency.
+3. Taste the smoothie and adjust the sweetness if needed by adding more honey or maple syrup.
+4. If you prefer a colder smoothie, add a few ice cubes and blend again until well combined.
+5. Pour the smoothie into a glass and enjoy!
+
+Feel free to customize this recipe by adding other fruits or ingredients that you enjoy. Enjoy your banana-free smoothie!
+</pre></div>
+</div>
+</div>
+</div>
+<p>Hmm… other than the friendly assertion that the recipe does not include bananas, the response was pretty banana-less!</p>
+<p>But how can you be certain it did not response as such only <em>because</em> you said you were allergic to bananas?</p>
+<p>Confirm by removing it from the prompt and restarting the chat history!</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">user_request</span> <span class="o">=</span> <span class="s2">&quot;I want to make a smoothie :)&quot;</span>
+
+<span class="n">chat_messages</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="n">chat_messages</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">user_request</span><span class="p">))</span>
+<span class="n">answer</span> <span class="o">=</span> <span class="k">await</span> <span class="n">openai_chat_completion</span><span class="o">.</span><span class="n">complete_chat_async</span><span class="p">(</span><span class="n">chat_messages</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+<span class="n">chat_messages</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">answer</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">print_chat</span><span class="p">(</span><span class="n">chat_messages</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>User:&gt; I want to make a smoothie :)
+
+ChefBot:&gt; Great! Making a smoothie is a fun and healthy way to enjoy a refreshing drink. Here&#39;s a simple recipe to get you started:
+
+Ingredients:
+- 1 cup of your favorite fruits (such as bananas, berries, mango, or pineapple)
+- 1 cup of liquid (such as milk, almond milk, coconut water, or yogurt)
+- 1 tablespoon of honey or maple syrup (optional, for added sweetness)
+- 1 cup of ice cubes
+
+Instructions:
+1. Gather all your ingredients and wash the fruits if necessary.
+2. Chop the fruits into smaller pieces for easier blending.
+3. Add the fruits, liquid, sweetener (if using), and ice cubes to a blender.
+4. Blend everything together on high speed until smooth and creamy. If the consistency is too thick, you can add more liquid.
+5. Taste the smoothie and adjust the sweetness or thickness according to your preference.
+6. Pour the smoothie into a glass or a portable bottle.
+7. You can garnish the smoothie with a sprinkle of chia seeds, shredded coconut, or a few fresh fruit slices if desired.
+8. Enjoy your homemade smoothie immediately!
+
+Feel free to customize your smoothie by adding other ingredients like spinach or kale for extra nutrients, protein powder for a post-workout boost, or a spoonful of nut butter for added creaminess. Have fun experimenting with different flavor combinations!
+</pre></div>
+</div>
+</div>
+</div>
+<p>And compare the response to the same prompt but a new settings instance while all other chat parameters are the same.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">blank_settings</span> <span class="o">=</span> <span class="n">ChatRequestSettings</span><span class="p">(</span><span class="n">max_tokens</span><span class="o">=</span><span class="mi">516</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">top_p</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+
+<span class="n">chat_messages</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="n">chat_messages</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">user_request</span><span class="p">))</span>
+<span class="n">answer</span> <span class="o">=</span> <span class="k">await</span> <span class="n">openai_chat_completion</span><span class="o">.</span><span class="n">complete_chat_async</span><span class="p">(</span><span class="n">chat_messages</span><span class="p">,</span> <span class="n">blank_settings</span><span class="p">)</span>
+<span class="n">chat_messages</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">answer</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">print_chat</span><span class="p">(</span><span class="n">chat_messages</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>User:&gt; I want to make a smoothie :)
+
+ChefBot:&gt; Great! Making a smoothie is a fun and easy way to enjoy a nutritious and delicious drink. Here&#39;s a simple recipe to get you started:
+
+Ingredients:
+- 1 ripe banana
+- 1 cup of frozen berries (such as strawberries, blueberries, or mixed berries)
+- 1 cup of milk (dairy or plant-based)
+- 1 tablespoon of honey or maple syrup (optional, for added sweetness)
+- 1/2 cup of yogurt (optional, for a creamier texture)
+- Ice cubes (optional, for a colder smoothie)
+
+Instructions:
+1. Peel the banana and break it into smaller chunks.
+2. Place the banana chunks, frozen berries, milk, honey or maple syrup, and yogurt (if using) into a blender.
+3. Blend all the ingredients together until smooth and creamy. If the mixture seems too thick, you can add a little more milk.
+4. If you prefer a colder smoothie, you can add a few ice cubes and blend again.
+5. Taste the smoothie and adjust the sweetness or thickness to your liking by adding more honey, milk, or yogurt if desired.
+6. Once you&#39;re satisfied with the consistency and taste, pour the smoothie into a glass and enjoy!
+
+Feel free to experiment with different fruits, vegetables, and add-ins like spinach, kale, peanut butter, or protein powder to customize your smoothie to your preferences. Enjoy your homemade smoothie!
+</pre></div>
+</div>
+</div>
+</div>
+<hr class="docutils" />
+<p>Recognize that the LLM’s outputs will always have a non-deterministic aspect of it, and even with the greatest logit bias definitions, there may be banned tokens present in the output.</p>
+<p>Prompt engineering is a tricky practice, and logit bias is just one tool to help.</p>
 </section>
 
     <script type="text/x-thebe-config">
